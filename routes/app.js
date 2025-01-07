@@ -1,6 +1,7 @@
 var router = require('express').Router()
 var appHandler = require('../core/appHandler')
 var authHandler = require('../core/authHandler')
+var RateLimit = require('express-rate-limit');
 
 module.exports = function () {
     router.get('/', authHandler.isAuthenticated, function (req, res) {
@@ -61,7 +62,12 @@ module.exports = function () {
 
     router.post('/bulkproducts',authHandler.isAuthenticated, appHandler.bulkProducts);
 
-    router.post('/bulkproductslegacy',authHandler.isAuthenticated, appHandler.bulkProductsLegacy);
+    var bulkProductsLegacyLimiter = RateLimit({
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        max: 100 // max 100 requests per windowMs
+    });
+
+    router.post('/bulkproductslegacy', bulkProductsLegacyLimiter, authHandler.isAuthenticated, appHandler.bulkProductsLegacy);
 
     return router
 }
